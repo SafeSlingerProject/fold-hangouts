@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+<!--
+    The MIT License (MIT)
+    
+    Copyright (c) 2010-2015 Carnegie Mellon University
+    
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+    
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+    
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+    THE SOFTWARE.
+-->
+
+  <ModulePrefs title="The Fold">
+  ﻿  <Require feature="rpc" />
+  ﻿  <Require feature="views" />
+  ﻿  <Require feature="locked-domain" />
+  </ModulePrefs>
+  <Content type="html"><![CDATA[     
+
+<html>
+<style type="text/css">
+<!--
+.button {
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ddd));
+  background: -moz-linear-gradient(top, #fff, #ddd);  
+  border: 1px solid #bbb;
+}
+
+.button:active {
+  background: -webkit-gradient(linear, left top, left bottom, from(#aaa), to(#333)); 
+  background: -moz-linear-gradient(bottom, #ddd, #aaa); }
+
+-->
+</style>
+<body>
+<div class="containerDiv">
+
+</div>
+	
+<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+<script src="//fold-hangouts.appspot.com/static/app.js"></script>
+
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
+<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
+<script src="//fold-hangouts.appspot.com/static/BigInt.js"></script>
+<script src="//fold-hangouts.appspot.com/static/jspack.js"></script>
+<script src="//fold-hangouts.appspot.com/static/safeslinger.js"></script>
+<script src="//fold-hangouts.appspot.com/static/safeslinger-ui.js"></script>
+<script src="//fold-hangouts.appspot.com/static/main.js"></script>
+
+<!--
+- - main video: Never speak the SECRET out loud or display on video.
+- - main video: It is safe to speak your word phrases to release the SECRET.
+- - side bar: Type or paste your SECRET here. (edit box)
+- - side bar: SEND TO THIS HANGOUT. (button)
+- - side bar: Speak or sign any of the following words to find a match. This ensures no one but the participants in this Hangout can receive the SECRET. (text)
+- - side bar: word word word (radio 1, non-cut-paste)
+- - side bar: word word word (radio 2, non-cut-paste)
+- - side bar: word word word (radio 3, non-cut-paste)
+- - side bar: Match Selected (button)
+- - side bar: No Match (button)
+- - side bar: Secret sent by User1, SHHHHHH!!!!! Just read it, don’t speak. (text, able to cut-paste)
+- - side bar: Secret will expire on 0:30 seconds from view (text, auto reset)
+- - side bar: RESET NOW (button)
+-->
+
+<!--
+<h1><img src="//fold-hangouts.appspot.com/static/hangouts-logo.png" 
+    alt="Google+ Hangouts Logo" height="50" width="50">The Fold</h1>
+
+    
+<div style="float: left; padding: 0px 20px; border-right: 1px solid #EEE">
+  <p>Collaborate with your friends to count to a big number!</p>
+  <dl>
+    <dt>Current count:</dt>
+    <dd id="count"></dd>
+    <dt>Player count:</dt>
+    <dd id="participants"></dd>
+  </dl>
+
+  <input type=button value="Click Me!" id="countButton"
+      onClick="countButtonClick()"/>
+  <input type=button value="Reset" id="resetButton"
+      onClick="resetButtonClick()"/>
+</div>
+<div style="float: left; padding: 0px 20px">
+  <p>Fetch some JSON from main.py</p>
+  <dl>
+    <dt>Message:</dt>
+    <dd id="message"></dd>
+  </dl>
+  <input type=button value="Get Message" id="getMessageButton"
+      onClick="getMessageClick()"/>
+</div>
+<div style="clear: both;"></div>
+
+<p>
+<input class="button" type="button" value="Show participants!" id="showParticipants" 
+    style="visibility:hidden;"
+    onClick="showParticipants()"/>
+</p>
+
+<div id="participantsDiv"></div>
+
+<hr>
+
+
+<script>
+function showParticipants() {
+  var participants = gapi.hangout.getParticipants();
+
+  var retVal = '<p>Participants: </p><ul>';
+
+  for (var index in participants) {
+    var participant = participants[index];
+
+    if (!participant.person) {
+      retVal += '<li>A participant not running this app</li>';
+    }
+    retVal += '<li>' + participant.person.displayName + '</li>';
+  }
+
+  retVal += '</ul>';
+
+  var div = document.getElementById('participantsDiv');
+
+  div.innerHTML = retVal;
+}
+
+function init() {
+  // When API is ready...                                                         
+  gapi.hangout.onApiReady.add(
+      function(eventObj) {
+        if (eventObj.isApiReady) {
+          document.getElementById('showParticipants')
+            .style.visibility = 'visible';
+        }
+      });
+}
+
+// Wait for gadget to load.                                                       
+gadgets.util.registerOnLoadHandler(init);
+</script>
+
+-->
+
+</body>
+]]>
+</Content>
+</Module>
+
