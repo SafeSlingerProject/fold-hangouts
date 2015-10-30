@@ -45,6 +45,11 @@
 	div {
 		text-align: center;
 	}
+	button {
+	    border-radius: 8px;
+	    moz-border-radius: 8px;
+	    webkit-border-radius: 8px;
+	}
 </style>
 <body>
 	
@@ -55,7 +60,6 @@
 <script src="//fold-hangouts.appspot.com/static/BigInt.js"></script>
 <script src="//fold-hangouts.appspot.com/static/jspack.js"></script>
 <script src="//fold-hangouts.appspot.com/static/safeslinger.js"></script>
-<script src="//fold-hangouts.appspot.com/static/safeslinger-ui-vc.js"></script>
 <script src="//fold-hangouts.appspot.com/static/app.js"></script>
 
 <h1 align="center">
@@ -70,6 +74,13 @@
 	</dl>
 	<input value="Reset" id="resetButton" onclick="resetButtonClick()" type="button">
 </div>
+<div id="secret-div">
+	<p>
+		Type your SECRET here.
+	</p>
+	<input id="secret-input" type="text">
+	<input value="Secure Send" id="server-submit" onclick="serverSubmitButtonClick()" type="button">
+</div>
 <div id="result-div">
 	<p>
 		Secret exchange complete!
@@ -78,22 +89,16 @@
 		<text id="result"></text>
 	</dl>
 </div>
-<div id="secret-div">
-	<p>
-		Type your SECRET here.
-	</p>
-	<input id="secret-input" type="text">
-	<input value="Secure Send" id="server-submit" onclick="serverSubmitButtonClick()" type="button">
-</div>
 <div id="phrase-div">
 	<p>
-		Share the word phrases to find a match, but never type them.
-	</p>
-	<input type="radio" name="phrase" id="first-input" /><label for="first-input" id="first"></label><br>
-	<input type="radio" name="phrase" id="second-input" /><label for="second-input" id="second"></label><br>
-	<input type="radio" name="phrase" id="third-input" /><label for="third-input" id="third"></label><br>
-	<input value="No Match" id="no-match" onclick="noMatchButtonClick()" type="button"> 
-	<input value="Match" id="next" onclick="nextButtonClick()" type="button">
+		Pick the matching word phrase everyone has, but never type them.
+	</p> 
+	<dl>
+		<button id="first" onclick="firstButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
+		<button id="second" onclick="secondButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
+		<button id="third" onclick="thirdButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
+	</dl>
+	<input value="No Match" id="no-match" onclick="noMatchButtonClick()" type="button">
 </div>
 
 <div style="clear: both;"></div>

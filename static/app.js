@@ -70,44 +70,34 @@ function getNumUsers() {
 	return gapi.hangout.getParticipants().length;
 }
 
-// function countButtonClick() {
-// console.log('Button clicked.');
-// var value = 0;
-// var count = gapi.hangout.data.getState()['count'];
-// if (count) {
-// value = parseInt(count);
-// }
-//
-// console.log('New count is ' + value);
-// gapi.hangout.data.submitDelta({
-// 'count' : '' + (value + 1)
-// });
-// }
-
 function resetButtonClick() {
 	// this should reset the entire state, and not touch count
 	initIncrementalState();
 }
 
-// var forbiddenCharacters = /[^a-zA-Z!0-9_\- ]/;
-function setText(element, text) {
-	// element.innerHTML = typeof text === 'string' ? text.replace(
-	// forbiddenCharacters, '') : '';
-	document.getElementById(element).innerHTML = text;
+function setInnerHtml(elementId, text) {
+	document.getElementById(elementId).innerHTML = text;
 }
 
-// function updateStateUi(state) {
-// var stateCount = state['count'];
-// if (!stateCount) {
-// setText('count', 'Probably 0');
-// } else {
-// setText('count', stateCount.toString());
-// }
-// }
+function setValue(elementId, text) {
+	document.getElementById(elementId).value = text;
+}
+
+function setVisibility(elementId, visible) {
+	if (visible) {
+		document.getElementById(elementId).style.visibility = 'visible';
+	} else {
+		document.getElementById(elementId).style.visibility = 'hidden';
+	}
+}
+
+function setChecked(elementId, checked) {
+	document.getElementById(elementId).checked = checked;
+}
 
 function updateParticipantsUi(participants) {
 	console.log('Participants count: ' + participants.length);
-	setText('participants', participants.length.toString());
+	setInnerHtml('participants', participants.length.toString());
 }
 
 function serverSubmitButtonClick() {
@@ -152,10 +142,8 @@ function serverSubmitButtonClick() {
 
 function beginExchange(unique_group_name, attempt_name, numUsers, secret) {
 
-	document.getElementById('users-div').style.visibility = 'visible';
-	document.getElementById('secret-div').style.visibility = 'hidden';
-	document.getElementById('phrase-div').style.visibility = 'hidden';
-	document.getElementById('result-div').style.visibility = 'hidden';
+	setVisibility('secret-div', ((secret == null || secret == "") ? false
+			: true));
 
 	console.log("unique_group_name --> " + unique_group_name);
 	console.log("attempt_name --> " + attempt_name);
@@ -238,17 +226,15 @@ function showPhrases(position, hash, decoy1, decoy2) {
 	var phrase2 = SafeSlinger.util.getWordPhrase(self.hashes[1]);
 	var phrase3 = SafeSlinger.util.getWordPhrase(self.hashes[2]);
 
-	document.getElementById('users-div').style.visibility = 'visible';
-	document.getElementById('secret-div').style.visibility = 'hidden';
-	document.getElementById('phrase-div').style.visibility = 'visible';
-	document.getElementById('result-div').style.visibility = 'hidden';
+	setInnerHtml("first", phrase1);
+	setInnerHtml("second", phrase2);
+	setInnerHtml("third", phrase3);
 
-	setText("first", phrase1);
-	setText("second", phrase2);
-	setText("third", phrase3);
+	setVisibility('phrase-div', true);
 }
 
 function noMatchButtonClick() {
+	setVisibility('phrase-div', false);
 	self.ssExchange.syncSignaturesRequest(null, function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
@@ -256,16 +242,27 @@ function noMatchButtonClick() {
 	});
 }
 
-function nextButtonClick() {
-	var selected = null;
-	if (document.getElementById("first-input").checked) {
-		selected = self.hashes[0];
-	} else if (document.getElementById("second-input").checked) {
-		selected = self.hashes[1];
-	} else if (document.getElementById("third-input").checked) {
-		selected = self.hashes[2];
-	}
-	self.ssExchange.syncSignaturesRequest(selected, function(response) {
+function firstButtonClick() {
+	setVisibility('phrase-div', false);
+	self.ssExchange.syncSignaturesRequest(self.hashes[0], function(response) {
+		console.log(response);
+		var isMatch = self.ssExchange.syncSignatures(response);
+		progressMatchRequest();
+	});
+}
+
+function secondButtonClick() {
+	setVisibility('phrase-div', false);
+	self.ssExchange.syncSignaturesRequest(self.hashes[1], function(response) {
+		console.log(response);
+		var isMatch = self.ssExchange.syncSignatures(response);
+		progressMatchRequest();
+	});
+}
+
+function thirdButtonClick() {
+	setVisibility('phrase-div', false);
+	self.ssExchange.syncSignaturesRequest(self.hashes[2], function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
 		progressMatchRequest();
@@ -288,11 +285,8 @@ function progressMatch() {
 }
 
 function showResults(plaintextSet) {
-
-	document.getElementById('users-div').style.visibility = 'visible';
-	document.getElementById('secret-div').style.visibility = 'hidden';
-	document.getElementById('phrase-div').style.visibility = 'hidden';
-	document.getElementById('result-div').style.visibility = 'visible';
+	setVisibility('phrase-div', false);
+	setVisibility('result-div', true);
 
 	var results = "";
 	for (var i = 0; i < self.ssExchange.uidSet.length; i++) {
@@ -303,27 +297,23 @@ function showResults(plaintextSet) {
 			}
 		}
 	}
-	setText("result", results);
+	setInnerHtml("result", results);
 }
 
 function initIncrementalState() {
-	document.getElementById("secret-input").value = "";
+	setValue("secret-input", "");
 
-	setText("first", "");
-	setText("second", "");
-	setText("third", "");
-	document.getElementById("first-input").checked = false;
-	document.getElementById("second-input").checked = false;
-	document.getElementById("third-input").checked = false;
-	
-	setText("result", "");
+	setInnerHtml("first", "");
+	setInnerHtml("second", "");
+	setInnerHtml("third", "");
 
-	document.getElementById('users-div').style.visibility = 'visible';
-	document.getElementById('secret-div').style.visibility = 'visible';
-	document.getElementById('phrase-div').style.visibility = 'hidden';
-	document.getElementById('result-div').style.visibility = 'hidden';
+	setInnerHtml("result", "");
 
-	// updateStateUi(gapi.hangout.data.getState());
+	setVisibility('users-div', true);
+	setVisibility('secret-div', true);
+	setVisibility('phrase-div', false);
+	setVisibility('result-div', false);
+
 	updateParticipantsUi(gapi.hangout.getParticipants());
 
 	// init
@@ -344,8 +334,6 @@ function init() {
 
 			gapi.hangout.data.onStateChanged.add(function(eventObj) {
 				console.log('onStateChanged');
-
-				// updateStateUi(eventObj.state);
 
 				if (getAttemptName() != self.attempt) {
 					self.attempt = getAttemptName();
