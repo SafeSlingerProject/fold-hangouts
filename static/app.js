@@ -22,96 +22,361 @@
  * THE SOFTWARE.
  */
 
-var serverPath = '//fold-hangouts.appspot.com/';
-
-// The functions triggered by the buttons on the Hangout App
-function countButtonClick() {
-  // Note that if you click the button several times in succession,
-  // if the state update hasn't gone through, it will submit the same
-  // delta again.  The hangout data state only remembers the most-recent
-  // update.
-  console.log('Button clicked.');
-  var value = 0;
-  var count = gapi.hangout.data.getState()['count'];
-  if (count) {
-    value = parseInt(count);
-  }
-
-  console.log('New count is ' + value);
-  // Send update to shared state.
-  // NOTE:  Only ever send strings as values in the key-value pairs
-  gapi.hangout.data.submitDelta({'count': '' + (value + 1)});
+function getGroupName() {
+	return gapi.hangout.getHangoutId();
 }
+
+function getAttemptName() {
+	var count = gapi.hangout.data.getState()['count'];
+	if (count) {
+		return count.toString();
+	} else {
+		return "";
+	}
+}
+
+function isExchangeActive() {
+	var exchanging = gapi.hangout.data.getState()['exchanging'];
+	if (exchanging == "0") {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+function addAttempt() {
+	// don't set local state, allow shared object callback to reset us
+	var value = 0;
+	count = gapi.hangout.data.getState()['count'];
+	if (count) {
+		value = parseInt(count);
+	}
+	console.log('New count is ' + value);
+	gapi.hangout.data.submitDelta({
+		'count' : '' + (value + 1)
+	});
+}
+
+function setExchangeActive(isActive) {
+	// set local state as well, so we do not re-call begin exchange
+	self.exchanging = (isActive ? "1" : "0");
+	console.log('Exchange activity is ' + isActive);
+	gapi.hangout.data.submitDelta({
+		'exchanging' : '' + (isActive ? "1" : "0")
+	});
+}
+
+function getNumUsers() {
+	return gapi.hangout.getParticipants().length;
+}
+
+// function countButtonClick() {
+// console.log('Button clicked.');
+// var value = 0;
+// var count = gapi.hangout.data.getState()['count'];
+// if (count) {
+// value = parseInt(count);
+// }
+//
+// console.log('New count is ' + value);
+// gapi.hangout.data.submitDelta({
+// 'count' : '' + (value + 1)
+// });
+// }
 
 function resetButtonClick() {
-  console.log('Resetting count to 0');
-  gapi.hangout.data.submitDelta({'count': '0'});
+	// this should reset the entire state, and not touch count
+	initIncrementalState();
 }
 
-var forbiddenCharacters = /[^a-zA-Z!0-9_\- ]/;
+// var forbiddenCharacters = /[^a-zA-Z!0-9_\- ]/;
 function setText(element, text) {
-  element.innerHTML = typeof text === 'string' ?
-      text.replace(forbiddenCharacters, '') :
-      '';
+	// element.innerHTML = typeof text === 'string' ? text.replace(
+	// forbiddenCharacters, '') : '';
+	document.getElementById(element).innerHTML = text;
 }
 
-function getMessageClick() {
-  console.log('Requesting message from main.py');
-  var http = new XMLHttpRequest();
-  http.open('GET', serverPath);
-  http.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-      var jsonResponse = JSON.parse(http.responseText);
-      console.log(jsonResponse);
-
-      var messageElement = document.getElementById('message');
-      setText(messageElement, jsonResponse['message']);
-    }
-  }
-  http.send();
-}
-
-function updateStateUi(state) {
-  var countElement = document.getElementById('count');
-  var stateCount = state['count'];
-  if (!stateCount) {
-    setText(countElement, 'Probably 0');
-  } else {
-    setText(countElement, stateCount.toString());
-  }
-}
+// function updateStateUi(state) {
+// var stateCount = state['count'];
+// if (!stateCount) {
+// setText('count', 'Probably 0');
+// } else {
+// setText('count', stateCount.toString());
+// }
+// }
 
 function updateParticipantsUi(participants) {
-  console.log('Participants count: ' + participants.length);
-  var participantsListElement = document.getElementById('participants');
-  setText(participantsListElement, participants.length.toString());
+	console.log('Participants count: ' + participants.length);
+	setText('participants', participants.length.toString());
+}
+
+function serverSubmitButtonClick() {
+	console.log('Click serverSubmitButtonClick');
+
+	// main video: Never speak the SECRET out loud or display on video.
+	// main video: It is safe to speak your word phrases to release the SECRET.
+	// side bar: Type or paste your SECRET here. (edit box)
+	// side bar: SEND TO THIS HANGOUT. (button)
+	// side bar: Speak or sign any of the following words to find a match. This
+	// ensures no one but the participants in this Hangout can receive the
+	// SECRET. (text)
+	// side bar: word word word (radio 1, non-cut-paste)
+	// side bar: word word word (radio 2, non-cut-paste)
+	// side bar: word word word (radio 3, non-cut-paste)
+	// side bar: Match Selected (button)
+	// side bar: No Match (button)
+	// side bar: Secret sent by User1, SHHHHHH!!!!! Just read it, don’t speak.
+	// (text, able to cut-paste)
+	// side bar: Secret will expire in 0:30 seconds from view (text, auto reset)
+	// side bar: RESET NOW (button)
+
+	var numUsers = getNumUsers();
+
+	// prevent single users from launching exchange
+	if (numUsers < 2) {
+		return false;
+	}
+
+	// button click requires secret, others do not need
+	var secret = document.getElementById("secret-input").value;
+	console.log("secret: " + secret);
+	if (secret == null || secret == "") {
+		return false;
+	}
+
+	// trigger hangouts state object to start exchange
+	setExchangeActive(true);
+
+	beginExchange(getGroupName(), getAttemptName(), numUsers, secret);
+}
+
+function beginExchange(unique_group_name, attempt_name, numUsers, secret) {
+
+	document.getElementById('users-div').style.visibility = 'visible';
+	document.getElementById('secret-div').style.visibility = 'hidden';
+	document.getElementById('phrase-div').style.visibility = 'hidden';
+	document.getElementById('result-div').style.visibility = 'hidden';
+
+	console.log("unique_group_name --> " + unique_group_name);
+	console.log("attempt_name --> " + attempt_name);
+	console.log("numUsers --> " + numUsers);
+
+	self.secret = secret;
+
+	var ssExchange = new SafeSlinger.SafeSlingerExchange(
+			"https://01060000t-dot-slinger-dev.appspot.com");
+	self.ssExchange = ssExchange;
+	self.ssExchange.numUsers = numUsers;
+	console.log("numUsers: " + self.ssExchange.numUsers);
+
+	var grpname = unique_group_name + attempt_name;
+	if (grpname == null || grpname == "") {
+		return false;
+	}
+	self.lowNum = parseInt(CryptoJS.enc.Hex.stringify(CryptoJS.SHA3(grpname))
+			.substring(0, 8), 16);
+	console.log("lowNum: " + self.lowNum);
+
+	self.ssExchange.beginExchange(self.secret);
+	self.ssExchange.assignUserRequest(function(response) {
+		console.log(response);
+		var userID = self.ssExchange.assignUser(response);
+
+		self.ssExchange.syncUsersRequest(self.lowNum, function(response) {
+			console.log(response);
+			var isData = self.ssExchange.syncUsers(response);
+			progressDataRequest();
+		});
+	});
+
+}
+
+function progressDataRequest() {
+	progressData();
+}
+
+function progressData() {
+	if (!self.ssExchange.isDataComplete()) {
+		setTimeout(function() {
+			progressData();
+		}, 1000);
+	} else {
+		var position = self.ssExchange.getPosition();
+		var hash = self.ssExchange.getHash24Bits();
+		var decoy1 = self.ssExchange.getDecoy24Bits1();
+		var decoy2 = self.ssExchange.getDecoy24Bits2();
+
+		showPhrases(position, hash, decoy1, decoy2);
+	}
+}
+
+function showPhrases(position, hash, decoy1, decoy2) {
+
+	console.log("position --> " + position);
+	console.log("hash --> " + hash);
+	console.log("decoy1 --> " + decoy1);
+	console.log("decoy2 --> " + decoy2);
+
+	self.hashes = [];
+	self.hashes[position - 1] = hash;
+	switch (position - 1) {
+	case 0:
+		self.hashes[1] = decoy1;
+		self.hashes[2] = decoy2;
+		break;
+	case 1:
+		self.hashes[0] = decoy1;
+		self.hashes[2] = decoy2;
+		break;
+	case 2:
+		self.hashes[0] = decoy1;
+		self.hashes[1] = decoy2;
+		break;
+	}
+
+	var phrase1 = SafeSlinger.util.getWordPhrase(self.hashes[0]);
+	var phrase2 = SafeSlinger.util.getWordPhrase(self.hashes[1]);
+	var phrase3 = SafeSlinger.util.getWordPhrase(self.hashes[2]);
+
+	document.getElementById('users-div').style.visibility = 'visible';
+	document.getElementById('secret-div').style.visibility = 'hidden';
+	document.getElementById('phrase-div').style.visibility = 'visible';
+	document.getElementById('result-div').style.visibility = 'hidden';
+
+	setText("first", phrase1);
+	setText("second", phrase2);
+	setText("third", phrase3);
+}
+
+function noMatchButtonClick() {
+	self.ssExchange.syncSignaturesRequest(null, function(response) {
+		console.log(response);
+		var isMatch = self.ssExchange.syncSignatures(response);
+		progressMatchRequest();
+	});
+}
+
+function nextButtonClick() {
+	var selected = null;
+	if (document.getElementById("first-input").checked) {
+		selected = self.hashes[0];
+	} else if (document.getElementById("second-input").checked) {
+		selected = self.hashes[1];
+	} else if (document.getElementById("third-input").checked) {
+		selected = self.hashes[2];
+	}
+	self.ssExchange.syncSignaturesRequest(selected, function(response) {
+		console.log(response);
+		var isMatch = self.ssExchange.syncSignatures(response);
+		progressMatchRequest();
+	});
+}
+
+function progressMatchRequest() {
+	progressMatch();
+}
+
+function progressMatch() {
+	if (!self.ssExchange.isMatchComplete()) {
+		setTimeout(function() {
+			progressMatch();
+		}, 1000);
+	} else {
+		var dataSet = self.ssExchange.getDataSet();
+		showResults(dataSet);
+	}
+}
+
+function showResults(plaintextSet) {
+
+	document.getElementById('users-div').style.visibility = 'visible';
+	document.getElementById('secret-div').style.visibility = 'hidden';
+	document.getElementById('phrase-div').style.visibility = 'hidden';
+	document.getElementById('result-div').style.visibility = 'visible';
+
+	var results = "";
+	for (var i = 0; i < self.ssExchange.uidSet.length; i++) {
+		var uid = self.ssExchange.uidSet[i];
+		if (plaintextSet[uid] != null && plaintextSet[uid] != "") {
+			if (uid != self.ssExchange.userID) {
+				results += "Their secret: " + plaintextSet[uid] + " ";
+			}
+		}
+	}
+	setText("result", results);
+}
+
+function initIncrementalState() {
+	document.getElementById("secret-input").value = "";
+
+	setText("first", "");
+	setText("second", "");
+	setText("third", "");
+	document.getElementById("first-input").checked = false;
+	document.getElementById("second-input").checked = false;
+	document.getElementById("third-input").checked = false;
+	
+	setText("result", "");
+
+	document.getElementById('users-div').style.visibility = 'visible';
+	document.getElementById('secret-div').style.visibility = 'visible';
+	document.getElementById('phrase-div').style.visibility = 'hidden';
+	document.getElementById('result-div').style.visibility = 'hidden';
+
+	// updateStateUi(gapi.hangout.data.getState());
+	updateParticipantsUi(gapi.hangout.getParticipants());
+
+	// init
+	setExchangeActive(false);
+	addAttempt();
 }
 
 // A function to be run at app initialization time which registers our callbacks
 function init() {
-  console.log('Init app.');
+	console.log('Init app.');
+	self.attempt = "";
+	self.exchanging = "0"; // false
 
-  var apiReady = function(eventObj) {
-    if (eventObj.isApiReady) {
-      console.log('API is ready');
+	// When API is ready...
+	gapi.hangout.onApiReady.add(function(eventObj) {
+		if (eventObj.isApiReady) {
+			console.log('API is ready');
 
-      gapi.hangout.data.onStateChanged.add(function(eventObj) {
-        updateStateUi(eventObj.state);
-      });
-      gapi.hangout.onParticipantsChanged.add(function(eventObj) {
-        updateParticipantsUi(eventObj.participants);
-      });
+			gapi.hangout.data.onStateChanged.add(function(eventObj) {
+				console.log('onStateChanged');
 
-      updateStateUi(gapi.hangout.data.getState());
-      updateParticipantsUi(gapi.hangout.getParticipants());
+				// updateStateUi(eventObj.state);
 
-      gapi.hangout.onApiReady.remove(apiReady);
-    }
-  };
+				if (getAttemptName() != self.attempt) {
+					self.attempt = getAttemptName();
+					setExchangeActive(false);
+					// self.ui.showServerSecretView(getGroupName(),
+					// getAttemptName(), getNumUsers());
+				}
+				if (isExchangeActive() != self.exchanging) {
+					self.exchanging = isExchangeActive();
+					if (isExchangeActive()) {
+						beginExchange(getGroupName(), getAttemptName(),
+								getNumUsers(), "");
+					}
+				}
+			});
 
-  // This application is pretty simple, but use this special api ready state
-  // event if you would like to any more complex app setup.
-  gapi.hangout.onApiReady.add(apiReady);
+			gapi.hangout.onParticipantsChanged.add(function(eventObj) {
+				console.log('onParticipantsChanged');
+
+				updateParticipantsUi(eventObj.participants);
+
+				setExchangeActive(false);
+				// self.ui.showServerSecretView(getGroupName(),
+				// getAttemptName(),
+				// getNumUsers());
+			});
+
+			initIncrementalState();
+		}
+	});
 }
 
+// Wait for gadget to load.
 gadgets.util.registerOnLoadHandler(init);

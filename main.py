@@ -26,8 +26,6 @@ class MainHandler(webapp2.RequestHandler):
     def get(self):
         # Set the cross origin resource sharing header to allow AJAX
         self.response.headers.add_header("Access-Control-Allow-Origin", "*")
-        # Print some JSON
-        self.response.out.write('{"message":"Hello World!"}\n')
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
