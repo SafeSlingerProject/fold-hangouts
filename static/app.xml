@@ -32,76 +32,74 @@
   <Content type="html"><![CDATA[     
 
 <html>
-<style type="text/css">
-	body {
-		color: white; 
-		background: black;
-	    position: absolute;
-	    top: 50%;
-	    left: 50%;
-	    margin-right: -50%;
-	    transform: translate(-50%, -50%);
-	}
-	div {
-		text-align: center;
-	}
-	button {
-	    border-radius: 8px;
-	    moz-border-radius: 8px;
-	    webkit-border-radius: 8px;
-	}
-</style>
+
+<head>
+	<link rel="stylesheet" href="//fold-hangouts.appspot.com/static/css/fold.css" type="text/css">
+</head>
+
 <body>
-	
-<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
-<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha3.js"></script>
-<script src="//crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/aes.js"></script>
-<script src="//fold-hangouts.appspot.com/static/BigInt.js"></script>
-<script src="//fold-hangouts.appspot.com/static/jspack.js"></script>
-<script src="//fold-hangouts.appspot.com/static/safeslinger.js"></script>
-<script src="//fold-hangouts.appspot.com/static/app.js"></script>
+	<script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/jquery-1.11.2.min.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/sha3.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/aes.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/BigInt.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/jspack.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/js/oridomi-min.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/safeslinger.js"></script>
+	<script src="//fold-hangouts.appspot.com/static/app.js"></script>
 
-<h1 align="center">
-	<img src="//fold-hangouts.appspot.com/static/hangouts-logo.png" alt="The Fold Logo" height="50" width="50"> The Fold
-</h1>
+
+<header>
+  <h1 align="center">The Fold</h1>
+</header>
+
 <div id="users-div">
-	<p>
-		Pass a secret to all in this meeting.
-	</p>
-	<dl>
-		<text id="participants"></text> users
-	</dl>
-	<input value="Reset" id="resetButton" onclick="resetButtonClick()" type="button">
-</div>
-<div id="secret-div">
-	<p>
-		Type your SECRET here.
-	</p>
-	<input id="secret-input" type="text">
-	<input value="Secure Send" id="server-submit" onclick="serverSubmitButtonClick()" type="button">
-</div>
-<div id="result-div">
-	<p>
-		Secret exchange complete!
-	</p>
-	<dl>
-		<text id="result"></text>
-	</dl>
-</div>
-<div id="phrase-div">
-	<p>
-		Pick the matching word phrase everyone has, but never type them.
-	</p> 
-	<dl>
-		<button id="first" onclick="firstButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
-		<button id="second" onclick="secondButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
-		<button id="third" onclick="thirdButtonClick()" style="font-size:14px;width:225;height:40"></button><br>
-	</dl>
-	<input value="No Match" id="no-match" onclick="noMatchButtonClick()" type="button">
+  <dl>
+    <text id="participants"></text>
+    users
+  </dl>
+  <p id="instruction">Type. Fold. Verify. Hush.</p>
 </div>
 
-<div style="clear: both;"></div>
+<div class="desk">
+  <br>
+  <div id="wrapper">
+    <div id="container" class="parchment">
+
+      <div id="result-div">
+        <dl>
+          <p>From
+            <text id="result-user"></text>:</p>
+          <text id="result"></text>
+        </dl>
+      </div>
+      <div id="secret-div">
+        <button id="server-submit" class="paper-button" onclick="serverSubmitButtonClick()">Fold</button>
+        <textarea id="secret-input" name="textarea" placeholder="Type a secret for all in this meeting. Press Fold to share."></textarea>
+      </div>
+      <div id="phrase-div" class="fadeout">
+        <dl>
+          <button id="first" class="paper-button" onclick="firstButtonClick()"></button>
+          <button id="second" class="paper-button" onclick="secondButtonClick()"></button>
+          <button id="third" class="paper-button" onclick="thirdButtonClick()"></button>
+          <button id="no-match" class="paper-button" onclick="noMatchButtonClick()">No Match</button>
+        </dl>
+      </div>
+
+    </div>
+  </div>
+  <br>
+  <br>
+  <br>
+  <br>
+
+</div>
+
+<footer class="footer">
+  <input value="New Note" id="resetButton" onclick="resetButtonClick()" type="button">
+</footer>
+
+
 
 </body>
 

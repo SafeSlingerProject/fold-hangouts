@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+var folded;
+
 function getGroupName() {
 	return gapi.hangout.getHangoutId();
 }
@@ -71,6 +73,9 @@ function getNumUsers() {
 }
 
 function resetButtonClick() {
+
+	doUiReset(); // <--------------------------------------------------------------------------------------
+
 	// this should reset the entire state, and not touch count
 	initIncrementalState();
 }
@@ -103,23 +108,6 @@ function updateParticipantsUi(participants) {
 function serverSubmitButtonClick() {
 	console.log('Click serverSubmitButtonClick');
 
-	// main video: Never speak the SECRET out loud or display on video.
-	// main video: It is safe to speak your word phrases to release the SECRET.
-	// side bar: Type or paste your SECRET here. (edit box)
-	// side bar: SEND TO THIS HANGOUT. (button)
-	// side bar: Speak or sign any of the following words to find a match. This
-	// ensures no one but the participants in this Hangout can receive the
-	// SECRET. (text)
-	// side bar: word word word (radio 1, non-cut-paste)
-	// side bar: word word word (radio 2, non-cut-paste)
-	// side bar: word word word (radio 3, non-cut-paste)
-	// side bar: Match Selected (button)
-	// side bar: No Match (button)
-	// side bar: Secret sent by User1, SHHHHHH!!!!! Just read it, don’t speak.
-	// (text, able to cut-paste)
-	// side bar: Secret will expire in 0:30 seconds from view (text, auto reset)
-	// side bar: RESET NOW (button)
-
 	var numUsers = getNumUsers();
 
 	// prevent single users from launching exchange
@@ -137,13 +125,14 @@ function serverSubmitButtonClick() {
 	// trigger hangouts state object to start exchange
 	setExchangeActive(true);
 
+	doUiFold(); // <--------------------------------------------------------------------------------------
 	beginExchange(getGroupName(), getAttemptName(), numUsers, secret);
 }
 
 function beginExchange(unique_group_name, attempt_name, numUsers, secret) {
 
-	setVisibility('secret-div', ((secret == null || secret == "") ? false
-			: true));
+	// setVisibility('secret-div', ((secret == null || secret == "") ? false
+	// : true));
 
 	console.log("unique_group_name --> " + unique_group_name);
 	console.log("attempt_name --> " + attempt_name);
@@ -226,15 +215,15 @@ function showPhrases(position, hash, decoy1, decoy2) {
 	var phrase2 = SafeSlinger.util.getWordPhrase(self.hashes[1]);
 	var phrase3 = SafeSlinger.util.getWordPhrase(self.hashes[2]);
 
-	setInnerHtml("first", phrase1);
-	setInnerHtml("second", phrase2);
-	setInnerHtml("third", phrase3);
-
-	setVisibility('phrase-div', true);
+	// setInnerHtml("first", phrase1);
+	// setInnerHtml("second", phrase2);
+	// setInnerHtml("third", phrase3);
+	// setVisibility('phrase-div', true);
+	doUiShowPhrase(phrase1, phrase2, phrase3); // <--------------------------------------------------------------------------------------
 }
 
 function noMatchButtonClick() {
-	setVisibility('phrase-div', false);
+	// setVisibility('phrase-div', false);
 	self.ssExchange.syncSignaturesRequest(null, function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
@@ -243,7 +232,7 @@ function noMatchButtonClick() {
 }
 
 function firstButtonClick() {
-	setVisibility('phrase-div', false);
+	// setVisibility('phrase-div', false);
 	self.ssExchange.syncSignaturesRequest(self.hashes[0], function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
@@ -252,7 +241,7 @@ function firstButtonClick() {
 }
 
 function secondButtonClick() {
-	setVisibility('phrase-div', false);
+	// setVisibility('phrase-div', false);
 	self.ssExchange.syncSignaturesRequest(self.hashes[1], function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
@@ -261,7 +250,7 @@ function secondButtonClick() {
 }
 
 function thirdButtonClick() {
-	setVisibility('phrase-div', false);
+	// setVisibility('phrase-div', false);
 	self.ssExchange.syncSignaturesRequest(self.hashes[2], function(response) {
 		console.log(response);
 		var isMatch = self.ssExchange.syncSignatures(response);
@@ -285,8 +274,8 @@ function progressMatch() {
 }
 
 function showResults(plaintextSet) {
-	setVisibility('phrase-div', false);
-	setVisibility('result-div', true);
+	// setVisibility('phrase-div', false);
+	// setVisibility('result-div', true);
 
 	var results = "";
 	for (var i = 0; i < self.ssExchange.uidSet.length; i++) {
@@ -297,7 +286,8 @@ function showResults(plaintextSet) {
 			}
 		}
 	}
-	setInnerHtml("result", results);
+	// setInnerHtml("result", results);
+	doUiUnfold(results); // <--------------------------------------------------------------------------------------
 }
 
 function initIncrementalState() {
@@ -344,10 +334,15 @@ function init() {
 				if (isExchangeActive() != self.exchanging) {
 					self.exchanging = isExchangeActive();
 					if (isExchangeActive()) {
+						doUiFold(); // <--------------------------------------------------------------------------------------
 						beginExchange(getGroupName(), getAttemptName(),
 								getNumUsers(), "");
 					}
 				}
+				
+				// Disable new note on exchange active
+			    document.getElementById('resetButton').enabled = !isExchangeActive();
+
 			});
 
 			gapi.hangout.onParticipantsChanged.add(function(eventObj) {
@@ -368,3 +363,94 @@ function init() {
 
 // Wait for gadget to load.
 gadgets.util.registerOnLoadHandler(init);
+
+// separate the concerns
+// -------------------------------------------------------------------------------------
+
+function doUiSetup() {
+    // hide lower third
+    document.getElementById('instruction').innerHTML = 'Type. Fold. Verify. Hush.';
+    document.getElementById("instruction").className = "";
+    document.getElementById('result-div').style.display = 'none';
+    document.getElementById('secret-div').style.visibility = 'visible';
+    document.getElementById('phrase-div').style.visibility = 'hidden';
+  };
+
+  function doUiFold() {
+    var audio = new Audio(
+      'https://fold-hangouts.appspot.com/static/paper-folding.wav');
+    audio.play();
+
+    // load oridomi, start exch, fold the DOM, show lower third, play fold
+    // sound, show phrases
+    folded = new OriDomi('.parchment', {
+      ripple: true,
+      touchEnabled: false,
+      hPanels: 3,
+      shading: true,
+      speed: 1000
+    });
+    folded.stairs(-90, 'top', {
+      sticky: true
+    });
+  }
+
+  function doUiShowPhrase(phrase1, phrase2, phrase3) {
+    document.getElementById('instruction').innerHTML = 'Every user has 3 buttons; only one will be the same. All must press the matching button.';
+    document.getElementById("instruction").className = "";
+    folded.modifyContent(function(el) {
+      el.querySelector('#phrase-div').style.visibility = 'visible';
+      el.querySelector('#phrase-div').className = "fadein";
+      el.querySelector('#first').innerHTML = phrase1;
+      el.querySelector('#second').innerHTML = phrase2;
+      el.querySelector('#third').innerHTML = phrase3;
+    });
+  }
+
+  function doUiUnfold(secret, user) {
+    document.getElementById('instruction').innerHTML = 'Do NOT speak the secret aloud.';
+    document.getElementById("instruction").className = "warning";
+    var audio = new Audio(
+      'https://fold-hangouts.appspot.com/static/paper-folding.wav');
+    audio.play();
+
+    // finish exch, hide all, show centered secret, unfold DOM, play fold sound
+    folded.modifyContent(function(el) {
+      el.querySelector('#result-user').innerHTML = user;
+      el.querySelector('#result').innerHTML = secret;
+      el.querySelector('#secret-div').style.visibility = 'hidden';
+      el.querySelector('#result-div').style.display = 'initial';
+      el.querySelector('#result-div').style.visibility = 'visible';
+      el.querySelector('#phrase-div').style.visibility = 'hidden';
+      el.querySelector('#phrase-div').className = "fadeout";
+    });
+    folded.unfold();
+  }
+
+  function doUiReset() {
+    // play crumple sound, reinitialize everything.
+    if (typeof folded == "undefined") {
+      folded = new OriDomi('.parchment', {
+        ripple: true,
+        touchEnabled: false,
+        hPanels: 3,
+        shading: true,
+        speed: 1000
+      });
+    }
+    folded.fracture(90).modifyContent(function(el) {
+      el.querySelector('#result').innerHTML = 'THE secret';
+      el.querySelector('#secret-div').style.visibility = 'hidden';
+      el.querySelector('#result-div').style.visibility = 'hidden';
+      el.querySelector('#phrase-div').style.visibility = 'hidden';
+    });
+    document.getElementById('instruction').innerHTML = 'Type. Fold. Verify. Hush.';
+    document.getElementById("instruction").className = "";
+    var audio = new Audio(
+      'https://fold-hangouts.appspot.com/static/paper-crumple.wav');
+    audio.play();
+    setTimeout(function() {
+      folded.reset().destroy();
+    }, 2000);
+  }
+  
